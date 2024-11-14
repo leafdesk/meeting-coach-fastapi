@@ -22,15 +22,24 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ./meeting_coach_key.pem ubuntu@43.203.122.230 << 'EOF'
           cd /home/ubuntu/meeting-coach-fastapi
-          # Git pull to update code
+          
+          # Pull the latest code
           git pull origin main
-          # 가상 환경 생성 (존재하지 않으면)
+
+          # Set up virtual environment if not exists
           if [ ! -d "venv" ]; then
             python3 -m venv venv
           fi
           source venv/bin/activate
-          # requirements.txt 파일을 설치하여 fastapi와 uvicorn 포함
-          pip install -r requirements.txt
-          # pm2로 FastAPI 서버 시작 또는 재시작 (ecosystem.config.cjs 사용)
-          pm2 start ecosystem.config.cjs
+          
+          # Only install requirements if requirements.txt has changed
+          if [[ -f ".requirements_installed" ]] && cmp -s requirements.txt .requirements_installed; then
+            echo "Requirements are already up-to-date."
+          else
+            pip install -r requirements.txt --upgrade --no-cache-dir
+            cp requirements.txt .requirements_installed
+          fi
+          
+          # Start or restart FastAPI server with pm2
+          pm2 start ecosystem.config.cjs --update-env || pm2 restart ecosystem.config.cjs --update-env
           EOF
