@@ -3,11 +3,11 @@ from fastapi import FastAPI
 app = FastAPI()
 
 
-@app.get("/")
+@app.get("/fastapi")
 async def root():
     return {"message": "Hello from FastAPI"}
 
 
-@app.get("/speech-to-text")
+@app.get("/fastapi/speech-to-text")
 async def speech_to_text():
     return {"message": "speech-to-text"}
