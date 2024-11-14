@@ -1,0 +1,30 @@
+name: Deploy FastAPI Server to AWS
+
+on:
+  push:
+    branches:
+      - main  # main 브랜치에 푸시될 때만 실행
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.MEETING_COACH_PEM_KEY }}  # AWS 서버의 SSH 키
+
+      - name: Deploy FastAPI Server
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ./meeting_coach_key.pem ubuntu@43.203.122.230 << 'EOF'
+          cd /home/ubuntu/meeting-coach-fastapi
+          git pull origin main
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pm2 restart meeting-coach-fastapi --update-env
+          EOF
+
