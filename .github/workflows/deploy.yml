@@ -3,7 +3,7 @@ name: Deploy FastAPI Server to AWS
 on:
   push:
     branches:
-      - main # main 브랜치에 푸시될 때만 실행
+      - main  # main 브랜치에 푸시될 때만 실행
 
 jobs:
   deploy:
@@ -22,11 +22,15 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ./meeting_coach_key.pem ubuntu@43.203.122.230 << 'EOF'
           cd /home/ubuntu/meeting-coach-fastapi
+          # Git pull to update code
           git pull origin main
+          # 가상 환경 생성 (존재하지 않으면)
           if [ ! -d "venv" ]; then
             python3 -m venv venv
           fi
           source venv/bin/activate
+          # requirements.txt 파일을 설치하여 fastapi와 uvicorn 포함
           pip install -r requirements.txt
-          source venv/bin/activate && pm2 start "venv/bin/uvicorn main:app --host 0.0.0.0 --port 4000" --name meeting-coach-fastapi || pm2 restart meeting-coach-fastapi
+          # pm2로 FastAPI 서버 시작 또는 재시작 (ecosystem.config.cjs 사용)
+          pm2 start ecosystem.config.cjs
           EOF
