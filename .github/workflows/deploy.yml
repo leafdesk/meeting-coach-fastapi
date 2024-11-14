@@ -3,7 +3,7 @@ name: Deploy FastAPI Server to AWS
 on:
   push:
     branches:
-      - main  # main 브랜치에 푸시될 때만 실행
+      - main # main 브랜치에 푸시될 때만 실행
 
 jobs:
   deploy:
@@ -13,18 +13,23 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.MEETING_COACH_PEM_KEY }}  # AWS 서버의 SSH 키
+      - name: Create PEM file
+        run: |
+          echo "${{ secrets.MEETING_COACH_PEM_KEY }}" > ./meeting_coach_key.pem
+          chmod 400 ./meeting_coach_key.pem
 
       - name: Deploy FastAPI Server
         run: |
           ssh -o StrictHostKeyChecking=no -i ./meeting_coach_key.pem ubuntu@43.203.122.230 << 'EOF'
           cd /home/ubuntu/meeting-coach-fastapi
           git pull origin main
+          # 가상 환경 생성 및 활성화
+          if [ ! -d "venv" ]; then
+            python3 -m venv venv
+          fi
           source venv/bin/activate
+          # requirements.txt 설치
           pip install -r requirements.txt
-          pm2 restart meeting-coach-fastapi --update-env
+          # pm2로 FastAPI 서버 시작 또는 재시작
+          pm2 start "venv/bin/uvicorn main:app --host 0.0.0.0 --port 4000" --name meeting-coach-fastapi || pm2 restart meeting-coach-fastapi
           EOF
-
