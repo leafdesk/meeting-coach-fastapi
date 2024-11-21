@@ -6,6 +6,7 @@ from module_export.speaker_divide import (
     load_diarization_results,
 )
 from module_export.speech2text import transcribe_audio
+from module_export.speech2text_fullText import transcribe_audio_file
 import os
 import platform
 from pydantic import BaseModel
@@ -140,7 +141,7 @@ async def speech_to_text(request: SpeechToTextRequest):
     """
     WAV 파일을 텍스트로 변환합니다. (엑셀 파일에 텍스트 삽입)
     """
-    
+
     try:
         # 환경에 따라 저장 디렉토리 결정
         if platform.system() == "Darwin":  # macOS
@@ -161,10 +162,43 @@ async def speech_to_text(request: SpeechToTextRequest):
         return {"error": str(e)}
 
 
-# 전체 회의 음성을 텍스트로 변환
+class SpeechToTextFullRequest(BaseModel):
+    """
+    전체 음성을 텍스트로 변환 요청 모델.
+    """
+
+    wav_file_path: str  # 파일 경로를 문자열로 받음
+
+
 @app.post("/fastapi/speech-to-text/full")
-async def speech_to_text_full(file: str):
-    return {"message": "Full text conversion completed", "summary": ""}
+async def speech_to_text_full(request: SpeechToTextFullRequest):
+    """
+    전체 WAV 파일을 텍스트로 변환합니다.
+    """
+
+    try:
+        # 환경에 따라 저장 디렉토리 결정
+        if platform.system() == "Darwin":  # macOS
+            storage_dir = "./res"
+        else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
+            storage_dir = "/home/ubuntu/res"
+
+        os.makedirs(storage_dir, exist_ok=True)  # 디렉토리 생성
+
+        # 음성을 텍스트로 변환
+        transcripts = transcribe_audio_file(request.wav_file_path)
+
+        # 전체 텍스트를 fullText.txt 파일에 저장
+        output_file_path = os.path.join(storage_dir, "fullText.txt")
+        with open(output_file_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(transcripts))
+
+        return {
+            "message": "Full text conversion completed",
+            "output_file": output_file_path,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # LLM을 이용한 텍스트 요약
