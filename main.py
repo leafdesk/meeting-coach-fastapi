@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from module_export.change2wav import mp4_to_wav
 import os
+import platform
 
 app = FastAPI()
 
@@ -13,15 +14,24 @@ async def root():
 # MP4 파일에서 음성만 추출하여 WAV 파일로 변환
 @app.post("/fastapi/extract-wav")
 async def extract_wav(file: UploadFile = File(...)):
-    # 특정 디렉토리에 저장
-    storage_dir = "/var/tmp/vmc"
+    # 환경에 따라 저장 디렉토리 결정
+    if platform.system() == "Darwin":  # macOS
+        storage_dir = "./resource"
+    else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
+        storage_dir = "/home/ubuntu/res"
+
+    # macOS와 AWS EC2 모두를 위한 저장 디렉토리 생성
     os.makedirs(storage_dir, exist_ok=True)
     
+    # 원래 파일 이름으로 저장
     temp_file_path = os.path.join(storage_dir, file.filename)
+    
     with open(temp_file_path, "wb") as f:
         f.write(await file.read())
     
     try:
+        # mp4_to_wav 함수를 호출하여 WAV 파일로 변환
+        # 원래 파일 경로를 그대로 사용
         wav_file_path = mp4_to_wav(temp_file_path)
         return {"message": "WAV file extracted", "wav_file_path": wav_file_path}
     except Exception as e:
