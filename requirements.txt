@@ -165,7 +165,7 @@ tokenizers==0.20.1
 torch==2.5.0+cu124
 torch-audiomentations==0.11.1
 torch_pitch_shift==1.2.5
-torchaudio==2.5.0+cu124
+torchaudio==2.5.0
 torchmetrics==1.5.1
 torchvision==0.20.0+cu124
 tqdm==4.66.5
