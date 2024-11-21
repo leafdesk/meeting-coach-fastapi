@@ -1,7 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
 from module_export.change2wav import mp4_to_wav
 from module_export.diarization_cpu import diarize_audio
-from module_export.speaker_divide import split_audio_by_speaker, load_diarization_results
+from module_export.speaker_divide import (
+    split_audio_by_speaker,
+    load_diarization_results,
+)
+from module_export.speech2text import transcribe_audio
 import os
 import platform
 from pydantic import BaseModel
@@ -70,10 +74,14 @@ async def diarization(request: DiarizationRequest):
         else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
             storage_dir = "/home/ubuntu/res"
 
-        os.makedirs(storage_dir, exist_ok=True)  # Create the directory if it doesn't exist
+        os.makedirs(
+            storage_dir, exist_ok=True
+        )  # Create the directory if it doesn't exist
 
         # diarize_audio 함수 호출
-        output_file = diarize_audio(request.num_speakers, request.wav_file_path, storage_dir)  # Pass storage_dir
+        output_file = diarize_audio(
+            request.num_speakers, request.wav_file_path, storage_dir
+        )  # Pass storage_dir
 
         return {"message": "Speaker separation completed", "output_file": output_file}
     except Exception as e:
@@ -84,7 +92,7 @@ class SpeakerDivideRequest(BaseModel):
     """
     화자 분리 요청 모델. (화자별 음성 파일 생성)
     """
-    
+
     diarization_excel: str
     wav_file_path: str
 
@@ -94,7 +102,7 @@ async def speaker_divide(request: SpeakerDivideRequest):
     """
     화자별로 음성을 나누어 저장합니다. (화자별 음성 파일 생성)
     """
-    
+
     # 환경에 따라 저장 디렉토리 결정
     if platform.system() == "Darwin":  # macOS
         storage_dir = "./res"
@@ -118,10 +126,39 @@ async def speaker_divide(request: SpeakerDivideRequest):
         return {"error": str(e)}
 
 
-# 화자 분리된 음성을 텍스트로 변환
+class SpeechToTextRequest(BaseModel):
+    """
+    음성을 텍스트로 변환 요청 모델.
+    """
+
+    wav_file_path: str
+    diarization_excel: str
+
+
 @app.post("/fastapi/speech-to-text")
-async def speech_to_text(file: str):
-    return {"message": "Speech to text conversion completed", "dialog": ""}
+async def speech_to_text(request: SpeechToTextRequest):
+    """
+    WAV 파일을 텍스트로 변환합니다. (엑셀 파일에 텍스트 삽입)
+    """
+    
+    try:
+        # 환경에 따라 저장 디렉토리 결정
+        if platform.system() == "Darwin":  # macOS
+            storage_dir = "./res"
+        else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
+            storage_dir = "/home/ubuntu/res"
+
+        os.makedirs(storage_dir, exist_ok=True)  # 디렉토리 생성
+
+        # 음성을 텍스트로 변환
+        output_file = transcribe_audio(request.wav_file_path, request.diarization_excel)
+
+        return {
+            "message": "Speech to text conversion completed",
+            "output_file": output_file,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # 전체 회의 음성을 텍스트로 변환
