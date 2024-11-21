@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from module_export.change2wav import mp4_to_wav
 from module_export.diarization_cpu import diarize_audio
+from module_export.speaker_divide import split_audio_by_speaker, load_diarization_results
 import os
 import platform
 from pydantic import BaseModel
@@ -49,7 +50,7 @@ async def extract_wav(file: UploadFile = File(...)):
 
 class DiarizationRequest(BaseModel):
     """
-    화자 분리 요청 모델.
+    화자 분리 요청 모델. (엑셀 파일 생성)
     """
 
     wav_file_path: str
@@ -59,7 +60,7 @@ class DiarizationRequest(BaseModel):
 @app.post("/fastapi/diarization")
 async def diarization(request: DiarizationRequest):
     """
-    WAV 파일에서 화자 분리를 수행합니다.
+    WAV 파일에서 화자 분리를 수행합니다. (엑셀 파일 생성)
     """
 
     try:
@@ -79,10 +80,42 @@ async def diarization(request: DiarizationRequest):
         return {"error": str(e)}
 
 
-# 화자별 WAV 파일 추출
+class SpeakerDivideRequest(BaseModel):
+    """
+    화자 분리 요청 모델. (화자별 음성 파일 생성)
+    """
+    
+    diarization_excel: str
+    wav_file_path: str
+
+
 @app.post("/fastapi/speaker-divide")
-async def speaker_divide(file: str):
-    return {"message": "Speaker-specific WAV files extracted"}
+async def speaker_divide(request: SpeakerDivideRequest):
+    """
+    화자별로 음성을 나누어 저장합니다. (화자별 음성 파일 생성)
+    """
+    
+    # 환경에 따라 저장 디렉토리 결정
+    if platform.system() == "Darwin":  # macOS
+        storage_dir = "./res"
+    else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
+        storage_dir = "/home/ubuntu/res"
+
+    os.makedirs(storage_dir, exist_ok=True)
+
+    # wav_file_path에서 파일을 읽어오기
+    temp_file_path = request.wav_file_path
+
+    try:
+        # 다이어리제이션 결과를 엑셀에서 불러오기
+        diarization_results = load_diarization_results(request.diarization_excel)
+
+        # 화자별 음성 분리
+        split_audio_by_speaker(temp_file_path, diarization_results, storage_dir)
+
+        return {"message": "Speaker-specific audio files extracted"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # 화자 분리된 음성을 텍스트로 변환
