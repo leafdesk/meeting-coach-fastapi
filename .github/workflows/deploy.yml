@@ -3,7 +3,7 @@ name: Deploy FastAPI Server to AWS
 on:
   push:
     branches:
-      - main  # main 브랜치에 푸시될 때만 실행
+      - main # main 브랜치에 푸시될 때만 실행
 
 jobs:
   deploy:
@@ -22,7 +22,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ./meeting_coach_key.pem ubuntu@43.203.122.230 << 'EOF'
           cd /home/ubuntu/meeting-coach-fastapi
-          
+
           # Pull the latest code
           git pull origin main
 
@@ -31,15 +31,15 @@ jobs:
             python3 -m venv venv
           fi
           source venv/bin/activate
-          
-          # Only install requirements if requirements.txt has changed
-          if [[ -f ".requirements_installed" ]] && cmp -s requirements.txt .requirements_installed; then
-            echo "Requirements are already up-to-date."
-          else
-            pip install -r requirements.txt --upgrade --no-cache-dir
-            cp requirements.txt .requirements_installed
-          fi
-          
+
+          # # Only install requirements if requirements.txt has changed
+          # if [[ -f ".requirements_installed" ]] && cmp -s requirements.txt .requirements_installed; then
+          #   echo "Requirements are already up-to-date."
+          # else
+          #   pip install -r requirements.txt --upgrade --no-cache-dir
+          #   cp requirements.txt .requirements_installed
+          # fi
+
           # Start or restart FastAPI server with pm2
           pm2 start ecosystem.config.cjs --update-env || pm2 restart ecosystem.config.cjs --update-env
           EOF
