@@ -5,7 +5,8 @@ import io
 import wave
 import pandas as pd
 import torch
-
+import os
+import platform
 
 def get_sample_rate(file_path):
     """WAV 파일의 샘플 레이트를 확인합니다."""
@@ -28,7 +29,14 @@ def convert_to_16bit(audio):
 
 def transcribe_audio_chunk(audio_chunk, sample_rate):
     """Google Cloud Speech-to-Text API를 사용하여 음성을 텍스트로 변환합니다."""
-    client = speech.SpeechClient.from_service_account_file("../apiKey/myKey.json")
+    
+    # 운영 체제에 따라 API 키 경로 설정
+    if platform.system() == "Darwin":  # macOS
+        api_key_path = "./apiKey/myKey.json"
+    else:  # AWS EC2 Ubuntu
+        api_key_path = "/home/ubuntu/meeting-coach-fastapi/apiKey/myKey.json"
+
+    client = speech.SpeechClient.from_service_account_file(api_key_path)
 
     # 오디오 조각을 메모리에서 처리
     with io.BytesIO() as audio_file:

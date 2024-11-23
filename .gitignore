@@ -37,3 +37,5 @@ venv.bak/
 *.coverage
 *.coverage.*
 *.pytest_cache/
+
+apiKey/
