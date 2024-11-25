@@ -3,7 +3,7 @@ import os
 import wave
 from google.cloud import speech_v1p1beta1 as speech
 from pydub import AudioSegment
-
+import platform
 
 def get_sample_rate(file_path):
     """WAV 파일의 샘플 레이트를 확인합니다."""
@@ -57,7 +57,12 @@ def transcribe_audio_chunk(audio_chunk, sample_rate, client):
 
 def transcribe_audio_file(file_path):
     """오디오 파일을 텍스트로 변환합니다."""
-    api_key_path = "../apiKey/myKey.json"
+    
+    if platform.system() == "Darwin":  # macOS
+        api_key_path = "./apiKey/myKey.json"
+    else:  # AWS EC2 Ubuntu
+        api_key_path = "/home/ubuntu/meeting-coach-fastapi/apiKey/myKey.json"
+    
     client = speech.SpeechClient.from_service_account_file(api_key_path)
 
     sample_rate = get_sample_rate(file_path)
