@@ -3,9 +3,14 @@ from pydub import AudioSegment
 from speechbrain.inference.diarization import Speech_Emotion_Diarization
 from collections import Counter
 
-# 모델 불러오기
+model = Speech_Emotion_Diarization.from_hparams(
+    source="speechbrain/emotion-diarization-wavlm-large",
+    savedir="speechbrain_models/emotion-diarization-wavlm-large"
+)
+
 classifier = Speech_Emotion_Diarization.from_hparams(
-    source="speechbrain/emotion-diarization-wavlm-large"
+    source="speechbrain_models/emotion-diarization-wavlm-large",
+    savedir="speechbrain_models/emotion-diarization-wavlm-large"
 )
 
 def analyze_emotion_segments(audio: AudioSegment, segment_duration=30):
