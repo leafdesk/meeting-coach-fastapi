@@ -39,3 +39,4 @@ venv.bak/
 *.pytest_cache/
 
 apiKey/
+wav2vec2_checkpoint/
