@@ -10,6 +10,7 @@ from module_export.speech2text_fullText import transcribe_audio_file
 import os
 import platform
 from pydantic import BaseModel
+from module_export.LLMsumurize import summarize_text  # 추가된 함수 임포트
 
 app = FastAPI()
 
@@ -201,10 +202,29 @@ async def speech_to_text_full(request: SpeechToTextFullRequest):
         return {"error": str(e)}
 
 
+class SummarizeRequest(BaseModel):
+    """
+    텍스트 요약 요청 모델.
+    """
+    file_path: str  # 요약할 텍스트 파일 경로
+
 # LLM을 이용한 텍스트 요약
 @app.post("/fastapi/summarize")
-async def llm_summarize(text: str):
-    return {"message": "Text summarized", "summary": ""}
+async def llm_summarize(request: SummarizeRequest):
+    """
+    텍스트 파일을 요약합니다.
+    """
+    
+    try:
+        # 텍스트 요약 생성
+        summary = summarize_text(request.file_path)
+
+        return {
+            "message": "Text summarized",
+            "summary": summary,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # LLM을 이용한 퀴즈 생성
