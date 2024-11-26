@@ -11,6 +11,7 @@ import os
 import platform
 from pydantic import BaseModel
 from module_export.LLMsumurize import summarize_text  # 추가된 함수 임포트
+from module_export.LLMgenerate import generate_quiz  # 추가된 함수 임포트
 
 app = FastAPI()
 
@@ -227,10 +228,29 @@ async def llm_summarize(request: SummarizeRequest):
         return {"error": str(e)}
 
 
+class QuizRequest(BaseModel):
+    """
+    퀴즈 생성을 위한 요청 모델.
+    """
+    summary_text: str  # 요약된 텍스트
+
 # LLM을 이용한 퀴즈 생성
 @app.post("/fastapi/generate-quiz")
-async def llm_generate_quiz(text: str):
-    return {"message": "Quiz generated", "quiz": []}
+async def llm_generate_quiz(request: QuizRequest):
+    """
+    요약된 텍스트를 기반으로 퀴즈를 생성합니다.
+    """
+    
+    try:
+        # 퀴즈 생성
+        quiz = generate_quiz(request.summary_text)
+
+        return {
+            "message": "Quiz generated",
+            "quiz": quiz,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # 화자 검증
