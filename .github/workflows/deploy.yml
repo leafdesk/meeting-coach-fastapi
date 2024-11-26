@@ -15,12 +15,12 @@ jobs:
 
       - name: Create PEM file
         run: |
-          echo "${{ secrets.MEETING_COACH_PEM_KEY }}" > ./meeting_coach_key.pem
+          echo "${{ secrets.VMC_PEM_KEY }}" > ./meeting_coach_key.pem
           chmod 400 ./meeting_coach_key.pem
 
       - name: Deploy FastAPI Server
         run: |
-          ssh -o StrictHostKeyChecking=no -i ./meeting_coach_key.pem ubuntu@43.203.122.230 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ./meeting_coach_key.pem ubuntu@3.38.135.174 << 'EOF'
           cd /home/ubuntu/meeting-coach-fastapi
 
           # Pull the latest code
