@@ -19,6 +19,8 @@ from module_export.openCV_deepFace_faceAnalysis import analyze_emotions_from_vid
 import uvicorn
 from pydantic import BaseModel
 from module_export.speaker_verification import verify_audio_files
+from module_export.timeStamp_interrupt import detect_interruptions  # 함수 임포트
+import pandas as pd
 
 
 app = FastAPI()
@@ -299,7 +301,7 @@ class AudioEmotionRequest(BaseModel):
 @app.post("/fastapi/audio-emotion-analysis")
 async def audio_emotion_analysis(request: AudioEmotionRequest):
     """
-    음성 감정 분석을 수행합니다.
+    음�� 감정 분석을 수행합니다.
     """
 
     # 환경에 따라 저장 디렉토리 결정
@@ -360,10 +362,32 @@ async def video_emotion_analysis(request: VideoEmotionRequest):
     }
 
 
-# 화자별 끼어들기 횟수 반환
+class TimestampInterruptRequest(BaseModel):
+    """
+    화자 끼어들기 검출 요청 모델.
+    """
+    file_path: str  # 엑셀 파일 경로
+
+
 @app.post("/fastapi/timestamp-interrupt")
-async def timestamp_interrupt(file: str):
-    return {"message": "Interrupt count calculated", "interrupt_count": 0}
+async def timestamp_interrupt(request: TimestampInterruptRequest):
+    """
+    화자별 끼어들기 횟수를 계산합니다.
+    """
+    
+    try:
+        # 엑셀 파일에서 데이터 불러오기
+        df = pd.read_excel(request.file_path)
+
+        # detect_interruptions 함수 호출
+        interrupter_count = detect_interruptions(df)
+
+        return {
+            "message": "Detected interruptions by speaker",
+            "interruptions": interrupter_count
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # 피드백 생성
@@ -372,5 +396,5 @@ async def generate_feedback(text: str):
     return {"message": "Feedback generated", "feedback": ""}
 
 
-if __name__ == "__main__":  # main 함수 추가
-    uvicorn.run(app, host="0.0.0.0", port=4000, log_level="info")  # FastAPI 서버 실행
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=4000, log_level="info")
