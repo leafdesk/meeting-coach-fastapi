@@ -12,9 +12,9 @@ import platform
 from pydantic import BaseModel
 from module_export.LLMsumurize import summarize_text
 from module_export.LLMgenerate import generate_quiz 
-# from module_export.speechBrain_voiceEmotion import (
-#     analyze_audio_emotion,
-# )
+from module_export.speechBrain_voiceEmotion import (
+    analyze_audio_emotion,
+)
 # from module_export.openCV_deepFace_faceAnalysis import analyze_emotions_from_video
 import uvicorn
 from pydantic import BaseModel
@@ -302,27 +302,27 @@ async def audio_emotion_analysis(request: AudioEmotionRequest):
     음성 감정 분석을 수행합니다.
     """
 
-    # # 환경에 따라 저장 디렉토리 결정
-    # if platform.system() == "Darwin":  # macOS
-    #     storage_dir = "./res"
-    # else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
-    #     storage_dir = "/home/ubuntu/res"
+    # 환경에 따라 저장 디렉토리 결정
+    if platform.system() == "Darwin":  # macOS
+        storage_dir = "./res"
+    else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
+        storage_dir = "/home/ubuntu/res"
 
-    # os.makedirs(storage_dir, exist_ok=True)  # 디렉토리 생성
+    os.makedirs(storage_dir, exist_ok=True)  # 디렉토리 생성
 
-    # # 요청에서 WAV 파일 경로 가져오기
-    # temp_file_path = request.wav_file_path
+    # 요청에서 WAV 파일 경로 가져오기
+    temp_file_path = request.wav_file_path
 
-    # try:
-    #     # 감정 분석 수행
-    #     analysis_results = analyze_audio_emotion(temp_file_path)
+    try:
+        # 감정 분석 수행
+        analysis_results = analyze_audio_emotion(temp_file_path)
 
-    #     return {
-    #         "message": "Audio emotion analysis completed",
-    #         "results": analysis_results,
-    #     }
-    # except Exception as e:
-    #     return {"error": str(e)}
+        return {
+            "message": "Audio emotion analysis completed",
+            "results": analysis_results,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # Define the request model for video emotion analysis

@@ -40,5 +40,6 @@ venv.bak/
 
 apiKey/
 wav2vec2_checkpoint/
+speechbrain_models/
 
 

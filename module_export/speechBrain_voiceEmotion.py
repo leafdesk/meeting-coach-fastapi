@@ -1,4 +1,5 @@
 import json
+import os
 from pydub import AudioSegment
 from speechbrain.inference.diarization import Speech_Emotion_Diarization
 from collections import Counter
@@ -32,7 +33,8 @@ def analyze_emotion_segments(audio: AudioSegment, segment_duration=30):
         base_time = i / 1000  # ms를 초로 변환
 
         # 세그먼트를 분석에 사용 (임시 파일을 현재 작업 디렉토리에 저장)
-        temp_segment_path = "../resource/temp_segment.wav"
+        temp_segment_path = "./res/temp_segment.wav"
+        os.makedirs(os.path.dirname(temp_segment_path), exist_ok=True)  # 디렉토리 생성
         segment.export(temp_segment_path, format="wav")
         diary = classifier.diarize_file(temp_segment_path)
 
