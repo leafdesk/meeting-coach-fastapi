@@ -15,7 +15,7 @@ from module_export.LLMgenerate import generate_quiz
 from module_export.speechBrain_voiceEmotion import (
     analyze_audio_emotion,
 )
-# from module_export.openCV_deepFace_faceAnalysis import analyze_emotions_from_video
+from module_export.openCV_deepFace_faceAnalysis import analyze_emotions_from_video
 import uvicorn
 from pydantic import BaseModel
 from module_export.speaker_verification import verify_audio_files
@@ -337,27 +337,27 @@ async def video_emotion_analysis(request: VideoEmotionRequest):
     Analyze emotions from the uploaded video file.
     """
     
-    # # 환경에 따라 저장 디렉토리 결정
-    # storage_dir = "./res"  # Adjust as necessary
-    # os.makedirs(storage_dir, exist_ok=True)
+    # 환경에 따라 저장 디렉토리 결정
+    storage_dir = "./res"  # Adjust as necessary
+    os.makedirs(storage_dir, exist_ok=True)
 
-    # # 비디오 파일 저장
-    # video_file_path = request.video_file_path  # Use the path from the request
-    # with open(video_file_path, "rb") as f:
-    #     video_data = f.read()
+    # 비디오 파일 저장
+    video_file_path = request.video_file_path  # Use the path from the request
+    with open(video_file_path, "rb") as f:
+        video_data = f.read()
 
-    # # Save the video file to the storage directory
-    # saved_video_path = os.path.join(storage_dir, os.path.basename(video_file_path))
-    # with open(saved_video_path, "wb") as f:
-    #     f.write(video_data)
+    # Save the video file to the storage directory
+    saved_video_path = os.path.join(storage_dir, os.path.basename(video_file_path))
+    with open(saved_video_path, "wb") as f:
+        f.write(video_data)
 
-    # # 감정 분석 수행
-    # emotions = analyze_emotions_from_video(saved_video_path)
+    # 감정 분석 수행
+    emotions = analyze_emotions_from_video(saved_video_path)
 
-    # return {
-    #     "message": "Video emotion analysis completed",
-    #     "emotions": emotions,
-    # }
+    return {
+        "message": "Video emotion analysis completed",
+        "emotions": emotions,
+    }
 
 
 # 화자별 끼어들기 횟수 반환
