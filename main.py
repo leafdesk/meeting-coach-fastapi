@@ -10,13 +10,16 @@ from module_export.speech2text_fullText import transcribe_audio_file
 import os
 import platform
 from pydantic import BaseModel
-from module_export.LLMsumurize import summarize_text  # 추가된 함수 임포트
-from module_export.LLMgenerate import generate_quiz  # 추가된 함수 임포트
+from module_export.LLMsumurize import summarize_text
+from module_export.LLMgenerate import generate_quiz 
 # from module_export.speechBrain_voiceEmotion import (
 #     analyze_audio_emotion,
-# )  # 추가된 함수 임포트
+# )
 # from module_export.openCV_deepFace_faceAnalysis import analyze_emotions_from_video
-import uvicorn  # 추가된 import
+import uvicorn
+from pydantic import BaseModel
+from module_export.speaker_verification import verify_audio_files
+
 
 app = FastAPI()
 
@@ -216,7 +219,6 @@ class SummarizeRequest(BaseModel):
     file_path: str  # 요약할 텍스트 파일 경로
 
 
-# LLM을 이용한 텍스트 요약
 @app.post("/fastapi/summarize")
 async def llm_summarize(request: SummarizeRequest):
     """
@@ -243,7 +245,6 @@ class QuizRequest(BaseModel):
     summary_text: str  # 요약된 텍스트
 
 
-# LLM을 이용한 퀴즈 생성
 @app.post("/fastapi/generate-quiz")
 async def llm_generate_quiz(request: QuizRequest):
     """
@@ -262,83 +263,101 @@ async def llm_generate_quiz(request: QuizRequest):
         return {"error": str(e)}
 
 
-# 화자 검증
+class SpeakerVerificationRequest(BaseModel):
+    """
+    화자 검증 요청 모델.
+    """
+    
+    audio_file1: str  # 첫 번째 음성 파일 경로
+    audio_file2: str  # 두 번째 음성 파일 경로
+
+
 @app.post("/fastapi/speaker-verification")
-async def speaker_verification(file: str, db_file: str):
-    return {"message": "Speaker verification completed", "similarity": 0.0}
+async def speaker_verification(request: SpeakerVerificationRequest):
+    """
+    두 음성 파일의 유사도를 계산합니다.
+    """
+    
+    try:
+        # verify_audio_files 함수를 호출하여 유사도 계산
+        result = verify_audio_files(request.audio_file1, request.audio_file2)
+        return {"message": "Speaker verification completed", "result": result}
+    except Exception as e:
+        return {"error": str(e)}
 
 
-# # 새로운 요청 모델 클래스 생성
-# class AudioEmotionRequest(BaseModel):
-#     """
-#     음성 감정 분석 요청 모델.
-#     """
+# 새로운 요청 모델 클래스 생성
+class AudioEmotionRequest(BaseModel):
+    """
+    음성 감정 분석 요청 모델.
+    """
 
-#     wav_file_path: str  # WAV 파일 경로를 문자열로 받음
-
-
-# # 음성 감정 분석
-# @app.post("/fastapi/audio-emotion-analysis")
-# async def audio_emotion_analysis(request: AudioEmotionRequest):
-#     """
-#     음성 감정 분석을 수행합니다.
-#     """
-
-#     # 환경에 따라 저장 디렉토리 결정
-#     if platform.system() == "Darwin":  # macOS
-#         storage_dir = "./res"
-#     else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
-#         storage_dir = "/home/ubuntu/res"
-
-#     os.makedirs(storage_dir, exist_ok=True)  # 디렉토리 생성
-
-#     # 요청에서 WAV 파일 경로 가져오기
-#     temp_file_path = request.wav_file_path
-
-#     try:
-#         # 감정 분석 수행
-#         analysis_results = analyze_audio_emotion(temp_file_path)
-
-#         return {
-#             "message": "Audio emotion analysis completed",
-#             "results": analysis_results,
-#         }
-#     except Exception as e:
-#         return {"error": str(e)}
+    wav_file_path: str  # WAV 파일 경로를 문자열로 받음
 
 
-# # Define the request model for video emotion analysis
-# class VideoEmotionRequest(BaseModel):
-#     video_file_path: str  # 비디오 파일 경로를 문자열로 받음
+# 음성 감정 분석
+@app.post("/fastapi/audio-emotion-analysis")
+async def audio_emotion_analysis(request: AudioEmotionRequest):
+    """
+    음성 감정 분석을 수행합니다.
+    """
+
+    # # 환경에 따라 저장 디렉토리 결정
+    # if platform.system() == "Darwin":  # macOS
+    #     storage_dir = "./res"
+    # else:  # AWS EC2 Ubuntu에서 실행 중으로 가정
+    #     storage_dir = "/home/ubuntu/res"
+
+    # os.makedirs(storage_dir, exist_ok=True)  # 디렉토리 생성
+
+    # # 요청에서 WAV 파일 경로 가져오기
+    # temp_file_path = request.wav_file_path
+
+    # try:
+    #     # 감정 분석 수행
+    #     analysis_results = analyze_audio_emotion(temp_file_path)
+
+    #     return {
+    #         "message": "Audio emotion analysis completed",
+    #         "results": analysis_results,
+    #     }
+    # except Exception as e:
+    #     return {"error": str(e)}
 
 
-# # 영상 감정 분석
-# @app.post("/fastapi/video-emotion-analysis")
-# async def video_emotion_analysis(request: VideoEmotionRequest):
-#     """
-#     Analyze emotions from the uploaded video file.
-#     """
-#     # 환경에 따라 저장 디렉토리 결정
-#     storage_dir = "./res"  # Adjust as necessary
-#     os.makedirs(storage_dir, exist_ok=True)
+# Define the request model for video emotion analysis
+class VideoEmotionRequest(BaseModel):
+    video_file_path: str  # 비디오 파일 경로를 문자열로 받음
 
-#     # 비디오 파일 저장
-#     video_file_path = request.video_file_path  # Use the path from the request
-#     with open(video_file_path, "rb") as f:
-#         video_data = f.read()
 
-#     # Save the video file to the storage directory
-#     saved_video_path = os.path.join(storage_dir, os.path.basename(video_file_path))
-#     with open(saved_video_path, "wb") as f:
-#         f.write(video_data)
+# 영상 감정 분석
+@app.post("/fastapi/video-emotion-analysis")
+async def video_emotion_analysis(request: VideoEmotionRequest):
+    """
+    Analyze emotions from the uploaded video file.
+    """
+    
+    # # 환경에 따라 저장 디렉토리 결정
+    # storage_dir = "./res"  # Adjust as necessary
+    # os.makedirs(storage_dir, exist_ok=True)
 
-#     # 감정 분석 수행
-#     emotions = analyze_emotions_from_video(saved_video_path)
+    # # 비디오 파일 저장
+    # video_file_path = request.video_file_path  # Use the path from the request
+    # with open(video_file_path, "rb") as f:
+    #     video_data = f.read()
 
-#     return {
-#         "message": "Video emotion analysis completed",
-#         "emotions": emotions,
-#     }
+    # # Save the video file to the storage directory
+    # saved_video_path = os.path.join(storage_dir, os.path.basename(video_file_path))
+    # with open(saved_video_path, "wb") as f:
+    #     f.write(video_data)
+
+    # # 감정 분석 수행
+    # emotions = analyze_emotions_from_video(saved_video_path)
+
+    # return {
+    #     "message": "Video emotion analysis completed",
+    #     "emotions": emotions,
+    # }
 
 
 # 화자별 끼어들기 횟수 반환

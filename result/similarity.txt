@@ -1,0 +1,1 @@
+Similarity Score: tensor([0.9867])
