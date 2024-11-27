@@ -16,6 +16,7 @@ from module_export.speechBrain_voiceEmotion import (
     analyze_audio_emotion,
 )  # 추가된 함수 임포트
 from module_export.openCV_deepFace_faceAnalysis import analyze_emotions_from_video
+import uvicorn  # 추가된 import
 
 app = FastAPI()
 
@@ -325,7 +326,7 @@ async def video_emotion_analysis(request: VideoEmotionRequest):
     video_file_path = request.video_file_path  # Use the path from the request
     with open(video_file_path, "rb") as f:
         video_data = f.read()
-    
+
     # Save the video file to the storage directory
     saved_video_path = os.path.join(storage_dir, os.path.basename(video_file_path))
     with open(saved_video_path, "wb") as f:
@@ -350,3 +351,7 @@ async def timestamp_interrupt(file: str):
 @app.post("/fastapi/generate-feedback")
 async def generate_feedback(text: str):
     return {"message": "Feedback generated", "feedback": ""}
+
+
+if __name__ == "__main__":  # main 함수 추가
+    uvicorn.run(app, host="0.0.0.0", port=4000, log_level="info")  # FastAPI 서버 실행
